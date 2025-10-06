@@ -42,7 +42,7 @@ var (
 			Pattern: "[b-c][a-z]",
 			Ignore:  false,
 		},
-		DeviceRE: regexp.MustCompile(`^xvd[b-c][a-z]$`),
+		DeviceRE: regexp.MustCompile(`^(?:xvd[b-c][a-z]?|nvme\d+n\d+(?:p\d+)?)$`),
 	}
 	defaultDeviceRange = &DeviceRange{
 		ParentLetters: []string{"d"},
@@ -53,7 +53,7 @@ var (
 			Pattern: "[f-p]",
 			Ignore:  false,
 		},
-		DeviceRE: regexp.MustCompile(`^xvd[f-p]$`),
+		DeviceRE: regexp.MustCompile(`^(?:xvd[d-f]?[f-p]|nvme\d+n\d+(?:p\d+)?)$`),
 	}
 )
 

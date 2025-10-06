@@ -79,6 +79,11 @@ func (d *driver) InstanceID(
 
 var errNoAvaiDevice = goof.New("no available device")
 
+var (
+	nvmeAliasWithPrefixRX = regexp.MustCompile(`/dev/(?:sd|xvd)[a-z]{1,3}`)
+	nvmeAliasNoPrefixRX   = regexp.MustCompile(`\b(?:sd|xvd)[a-z]{1,3}\b`)
+)
+
 // NextDevice returns the next available device.
 func (d *driver) NextDevice(
 	ctx types.Context,
@@ -163,6 +168,17 @@ func fileExists(filePath string) (bool, error) {
 	return false, err
 }
 
+func extractNVMEAlias(raw []byte) string {
+	data := string(raw)
+	if alias := nvmeAliasWithPrefixRX.FindString(data); alias != "" {
+		return alias
+	}
+	if alias := nvmeAliasNoPrefixRX.FindString(data); alias != "" {
+		return "/dev/" + alias
+	}
+	return ""
+}
+
 // Retrieve device paths currently attached and/or mounted
 func (d *driver) LocalDevices(
 	ctx types.Context,
@@ -176,11 +192,19 @@ func (d *driver) LocalDevices(
 
 	devMap := map[string]string{}
 	ns := d.deviceRange
+	// Use large device range for NVMe hosts, same as NextDevice()
+	if ebsUtils.IsNVMEHost(ctx) {
+		ns = ebsUtils.GetDeviceRange(true)
+	}
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		fields := strings.Fields(scanner.Text())
 		if len(fields) != 4 {
+			continue
+		}
+		// Skip header line(s) - major and minor should be numeric
+		if fields[0] == "major" || fields[1] == "minor" {
 			continue
 		}
 		devName := fields[3]
