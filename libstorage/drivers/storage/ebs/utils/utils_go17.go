@@ -1,5 +1,8 @@
+//go:build go1.7
 // +build go1.7
 
+// ABOUTME: HTTP helpers for metadata operations on Go 1.7+ runtimes.
+// ABOUTME: Extends request execution with IMDS token handling support.
 package utils
 
 import (
@@ -16,6 +19,9 @@ func doRequestWithClient(
 	ctx types.Context,
 	client *http.Client,
 	req *http.Request) (*http.Response, error) {
+	if err := maybeAttachIMDSToken(ctx, client, req); err != nil {
+		return nil, err
+	}
 	req = req.WithContext(ctx)
 	return client.Do(req)
 }

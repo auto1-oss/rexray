@@ -1,9 +1,15 @@
+//go:build !windows
 // +build !windows
 
+// ABOUTME: Unix-specific helpers for device discovery and NVMe detection.
+// ABOUTME: Provides device range utilities for EBS integrations on Linux.
 package utils
 
 import (
+	"os"
+	"path/filepath"
 	"regexp"
+	"sync"
 
 	"github.com/rexray/rexray/libstorage/api/types"
 )
@@ -50,6 +56,30 @@ var (
 		DeviceRE: regexp.MustCompile(`^xvd[f-p]$`),
 	}
 )
+
+var (
+	nvmeHostOnce sync.Once
+	nvmeHost     bool
+)
+
+func resetDeviceRange() {
+	nvmeHostOnce = sync.Once{}
+	nvmeHost = false
+}
+
+// IsNVMEHost returns true when NVMe devices are present on the system.
+func IsNVMEHost(ctx types.Context) bool {
+	nvmeHostOnce.Do(func() {
+		if matches, err := filepath.Glob("/dev/nvme*n*"); err == nil && len(matches) > 0 {
+			nvmeHost = true
+			return
+		}
+		if _, err := os.Stat("/dev/nvme0"); err == nil {
+			nvmeHost = true
+		}
+	})
+	return nvmeHost
+}
 
 // GetDeviceRange returns a specified DeviceRange object
 func GetDeviceRange(useLargeDeviceRange bool) *DeviceRange {

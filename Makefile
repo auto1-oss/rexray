@@ -52,7 +52,7 @@ endif
 # available then print an error
 $(PROG):
 ifeq (1,$(DOCKER))
-	docker run -it \
+	docker run --platform linux/arm64 -it \
 	  -v "$(PWD)":"/go/src/$(GO_IMPORT_PATH)" golang:$(GO_VERSION) \
 	  bash -c "cd \"src/$(GO_IMPORT_PATH)\" && \
 	  XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go generate && \
@@ -89,7 +89,7 @@ endif
 
 $(SEMVER_MK):
 ifeq (1,$(DOCKER))
-	docker run -it \
+	docker run --platform linux/arm64 -it \
 	  -v "$(PWD)":"/go/src/$(GO_IMPORT_PATH)" golang:$(GO_VERSION) \
 	  bash -c "cd \"src/$(GO_IMPORT_PATH)\" && \
 	  XGOOS=$(GOOS) XGOARCH=$(GOARCH) GOOS= GOARCH= go run core/semver/semver.go -f mk -o $@"
@@ -285,7 +285,7 @@ endif
 DOCKER_PLUGIN_REXRAYFILE := $(PROG)
 DOCKER_PLUGIN_REXRAYFILE_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/$(PROG)
 $(DOCKER_PLUGIN_REXRAYFILE_TGT): $(DOCKER_PLUGIN_REXRAYFILE)
-	cp -f $? $@
+	cp -f $(DOCKER_PLUGIN_REXRAYFILE) $@
 
 DOCKER_PLUGIN_CONFIGJSON_TGT := $(DOCKER_PLUGIN_BUILD_PATH)/config.json
 
@@ -299,7 +299,7 @@ $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
 										$(DOCKER_PLUGIN_REXRAYFILE_TGT)
 	docker plugin rm $(DOCKER_PLUGIN_NAME) 2> /dev/null || true
 	sudo rm -fr $(@D)
-	docker build \
+	docker build --platform linux/arm64 \
 	  --label `driver="$(DRIVER)"` \
 	  --label `semver="$(SEMVER)"` \
 	  -t rootfsimage $(<D) && \
@@ -308,7 +308,7 @@ $(DOCKER_PLUGIN_ENTRYPOINT_ROOTFS_TGT): $(DOCKER_PLUGIN_CONFIGJSON_TGT) \
 	  sudo docker export "$$id" | sudo tar -x -C $(@D) && \
 	  docker rm -vf "$$id" && \
 	  docker rmi rootfsimage
-	sudo docker plugin create $(DOCKER_PLUGIN_NAME) $(<D)
+	sudo docker plugin create 049736579808.dkr.ecr.eu-west-1.amazonaws.com/docker-plugins/rexray-ebs-arm64:stable $(<D)
 	docker plugin ls
 
 push-docker-plugin:

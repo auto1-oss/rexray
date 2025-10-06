@@ -1,1 +1,1 @@
-# REX-Ray Docker Plug-in for Amazon EBS
+REX-Ray Docker Plug-in for Amazon EBS

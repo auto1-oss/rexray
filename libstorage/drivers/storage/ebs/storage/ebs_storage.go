@@ -193,6 +193,7 @@ func (d *driver) Login(ctx types.Context) (interface{}, error) {
 						},
 					},
 					&credentials.EnvProvider{},
+					ebsUtils.NewIMDSRoleProvider(ctx),
 					&credentials.SharedCredentialsProvider{},
 					&ec2rolecreds.EC2RoleProvider{
 						Client: ec2metadata.New(sess),
@@ -867,9 +868,9 @@ func (d *driver) SnapshotRemove(
 	*/
 }
 
-///////////////////////////////////////////////////////////////////////
-/////////        HELPER FUNCTIONS SPECIFIC TO PROVIDER        /////////
-///////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
+// ///////        HELPER FUNCTIONS SPECIFIC TO PROVIDER        /////////
+// /////////////////////////////////////////////////////////////////////
 // getVolume searches for and returns volumes matching criteria
 func (d *driver) getVolume(
 	ctx types.Context,

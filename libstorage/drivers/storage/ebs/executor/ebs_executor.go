@@ -89,6 +89,9 @@ func (d *driver) NextDevice(
 
 	// Get device range
 	ns := d.deviceRange
+	if ebsUtils.IsNVMEHost(ctx) {
+		ns = ebsUtils.GetDeviceRange(true)
+	}
 
 	localDevices, err := d.LocalDevices(
 		ctx, &types.LocalDevicesOpts{Opts: opts})
