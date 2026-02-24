@@ -958,8 +958,16 @@ func (d *driver) toTypesVolume(
 					deviceName = strings.Replace(
 						*attachment.Device, "sd",
 						d.deviceRange.NextDeviceInfo.Prefix, 1)
-					// Keep device name if it is found in local devices
-					if _, ok := ld.DeviceMap[deviceName]; !ok {
+					// Keep device name if it is found in local
+					// devices. Use the mapped device path (value)
+					// which is the actual block device. On NVMe
+					// instances without udev symlinks, the key may
+					// be an alias like /dev/xvdba while the value
+					// is the real path /dev/nvme2n1 needed for
+					// mount operations.
+					if devPath, ok := ld.DeviceMap[deviceName]; ok {
+						deviceName = devPath
+					} else {
 						deviceName = ""
 					}
 				}

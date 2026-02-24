@@ -237,6 +237,19 @@ func (d *driver) LocalDevices(
 								"error checking if device exists")
 							return nil, err
 						}
+						// No udev symlink for this NVMe alias.
+						// This is common on OSes without EBS NVMe
+						// udev rules (e.g., Bottlerocket). Add the
+						// alias to the device map directly so the
+						// storage driver can match the attachment.
+						devMap[dev] = devPath
+						xvdDev := strings.Replace(
+							dev, "/dev/sd",
+							"/dev/xvd", 1)
+						if xvdDev != dev {
+							devMap[xvdDev] = devPath
+						}
+						continue
 					} else {
 						devName = strings.TrimLeft(dev, "/dev/")
 						devPath = dev
